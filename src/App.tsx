@@ -1,23 +1,35 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
+import { Tree } from 'antd';
+import type { GetProps, TreeDataNode } from 'antd';
 import "./App.css";
 
 interface Message {
   code: number
   message: string
-  data: any
+  data: string[]
 }
 
 function App() {
-  const [fileList, setFileList] = useState([]);
+  const [fileList, setFileList] = useState<TreeDataNode[]>([]);
 
   async function getFileList(path: string = '/') {
     const { code, message, data } = await invoke<Message>("get_file_list", { path })
     if (code === 200) {
-      setFileList(data);
+      setFileList(data.map(file => {
+        return {
+          title: file,
+          key: file,
+          isLeaf: false,
+        }
+      }));
     } else {
       console.log(message);
     }
+  }
+
+  function onLoadData() {
+
   }
 
   useEffect(() => {
@@ -31,13 +43,7 @@ function App() {
         <div i-carbon-skip-back-filled cursor-pointer text-blue></div>
         <div i-carbon-skip-forward-filled cursor-pointer text-blue></div>
       </div>
-      <ul list-none>
-        {
-          fileList.map((file, i) => (<li key={file} cursor-pointer onClick={() => getFileList(file)}>
-            {i + 1}、{file}
-          </li>))
-        }
-      </ul>
+      <Tree.DirectoryTree treeData={fileList} />
     </div>
   );
 }
