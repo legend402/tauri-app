@@ -1,19 +1,24 @@
-import { Tooltip, Tree } from "antd";
+import { Tree } from "antd";
 import { type FC } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import type { TreeDataNode } from 'antd';
 import { TreeNode } from "./TreeNode";
+import { useSearchingFile } from "../utils/hooks/useSearchingFile";
 
-interface Message {
+export interface Message {
   code: number
   message: string
-  data: {
-    file_type: 'dir' | 'file',
-    path: string,
-  }[]
+  data: FileInfo[]
+}
+
+export interface FileInfo {
+  file_type: 'dir' | 'file',
+  path: string,
+  file_name: string,
 }
 export type DirectoryTreeProps = {
-
+  searchText?: string
+  rootPath?: string
 }
 
 function getFileList(path: string) {
@@ -35,15 +40,24 @@ const updateTreeData = (list: TreeDataNode[], key: string, children: TreeDataNod
     }
     return node;
   });
-export const DirectoryTree: FC<DirectoryTreeProps> = () => {
+export const DirectoryTree: FC<DirectoryTreeProps> = (props) => {
   const [fileList, setFileList] = useState<TreeDataNode[]>([]);
+  const [mode, setMode] = useState('normal')
 
   useEffect(() => {
+    setMode('normal')
     initDirectoryTree();
-  }, []);
+  }, [props.rootPath]);
+
+  useEffect(() => {
+    if (props.searchText) {
+      setMode('searching')
+      startSearch();
+    }
+  }, [props.searchText]);
 
   async function initDirectoryTree(path: string = '/') {
-    const { code, message, data } = await getFileList(path)
+    const { code, message, data } = await getFileList(props.rootPath || path)
     if (code === 200) {
       const formatData = data.map(file => {
         return {
@@ -57,8 +71,8 @@ export const DirectoryTree: FC<DirectoryTreeProps> = () => {
       console.log(message);
     }
   }
-  const onloadData = useCallback((node: TreeDataNode) => {
-    return new Promise<void>((resolve, reject) => {
+  const onloadData = (node: TreeDataNode) => {
+    return new Promise<void>((resolve) => {
       if (node.children) {
         resolve();
         return;
@@ -73,21 +87,35 @@ export const DirectoryTree: FC<DirectoryTreeProps> = () => {
               isLeaf: file.file_type === 'file',
             } 
           })
-          setFileList((origin) =>
-            updateTreeData(origin, node.key as string, children),
-          );
+          if (mode === 'searching') {
+            setResult((origin) =>
+              updateTreeData(origin, node.key as string, children),
+            );
+          } else {
+            setFileList((origin) =>
+              updateTreeData(origin, node.key as string, children),
+            );
+          }
           resolve()
         } else {
           resolve()
         }
       })
     })
-  }, [])
+  }
+  const { result, startSearch, isSearching, setResult } = useSearchingFile({
+    text: props.searchText,
+    dir: props.rootPath,
+  })
+
+  const actualList = useMemo(() => mode === 'searching' ? result : fileList, [mode, result, fileList])
+
   return <>
-    <Tree.DirectoryTree 
+    <Tree.DirectoryTree
       loadData={onloadData}
-      treeData={fileList}
-      titleRender={(data) => <TreeNode data={data} />}>
+      treeData={actualList}
+      height={530}
+      titleRender={(data) => <TreeNode data={data} originName={ mode === 'searching' } />}>
     </Tree.DirectoryTree>
   </>
 }

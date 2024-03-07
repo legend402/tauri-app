@@ -4,15 +4,16 @@ use super::file_struct::Message;
 
 #[tauri::command]
 pub async fn open_file(path: &str) -> Result<Message<String>, Message<String>> {
-  println!("open file: {}", "D:".to_owned()+path);
+  let mut path_buf = PathBuf::from("D:\\");
+  path_buf.push(&path);
   let output = match env::consts::OS {
     // 对于 Unix-like 系统（包括 Linux 和 macOS）
-    "linux" | "macos" => Command::new("xdg-open").arg("D:".to_owned()+path).output().unwrap(),
+    "linux" | "macos" => Command::new("xdg-open").arg(path_buf).output().unwrap(),
     // 对于 Windows 系统
-    "windows" => Command::new("explorer.exe").arg("D:".to_owned()+path).output().unwrap(),
+    "windows" => Command::new("explorer.exe").arg(path_buf).output().unwrap(),
     _ => return Err(Message {
       message: format!("Unsupported operating system: {}", env::consts::OS),
-      code: 0,
+      code: 01,
       data: "".to_string(),
     }),
   };
@@ -22,7 +23,7 @@ pub async fn open_file(path: &str) -> Result<Message<String>, Message<String>> {
     println!("Failed to start the file manager. Error: {:?}", output);
     return Ok(Message {
       message: format!("Unsupported operating system: {}", env::consts::OS),
-      code: 0,
+      code: 02,
       data: "".to_string(),
     })
   } else {
