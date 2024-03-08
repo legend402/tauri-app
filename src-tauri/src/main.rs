@@ -4,7 +4,8 @@
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 mod handler;
-use crate::handler::get_file_list::{ get_file_list, search_file };
+use crate::handler::get_file_list::get_file_list;
+use crate::handler::search_file::search_file;
 use crate::handler::file_utils::open_file;
 
 fn main() {

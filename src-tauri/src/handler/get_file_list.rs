@@ -1,13 +1,13 @@
 use std::path::PathBuf;
-use std::{env, fs, thread};
+use std::{env, fs};
 
 use super::file_struct::Message;
 
 #[derive(serde::Serialize)]
 pub struct FileList {
-  file_type: String,
-  path: String,
-  file_name: String,
+  pub file_type: String,
+  pub path: String,
+  pub file_name: String,
 }
 // Implement Clone for FileList
 impl Clone for FileList {
@@ -67,7 +67,7 @@ pub async fn get_file_list(path: &str) -> Result<Message<Vec<FileList>>, Message
   })
 }
 
-fn get_file_type(dir: &PathBuf) -> String {
+pub fn get_file_type(dir: &PathBuf) -> String {
   if fs::metadata(&dir).unwrap().is_dir() {
     "dir".to_string()
   } else {
@@ -89,36 +89,4 @@ fn get_windows_drive_roots() -> Vec<FileList> {
       );
   }
   roots
-}
-
-#[tauri::command]
-pub fn search_file(mut dir: &str, text: &str, windows: tauri::Window) {
-  dir = if env::consts::OS == "windows" && dir == "/" { "C:\\" } else { dir };
-  let result = thread::spawn(move || {
-    search_file_inner(&dir, &text, &windows);
-    windows.emit("search-end", 0);
-    println!("search-end");
-  });
-  result.join().unwrap();
-}
-
-pub fn search_file_inner(dir: &str, text: &str, windows: &tauri::Window) {
-  for entry in fs::read_dir(&dir).unwrap() {
-    let path = entry.unwrap().path();
-    let is_dir = get_file_type(&path);
-    if path.display().to_string().contains(text) {
-      println!("{}", path.display().to_string());
-      windows.emit::<Message<FileList>>("searching", Message {
-        message: "success".to_string(),
-        code: 200,
-        data: FileList {
-          file_type: is_dir,
-          path: path.display().to_string(),
-          file_name: path.file_name().unwrap().to_string_lossy().to_string(),
-        }
-      });
-    } else if is_dir == "dir" {
-      search_file_inner(&path.display().to_string(), text, windows);
-    }
-  }
 }

@@ -19,6 +19,8 @@ export interface FileInfo {
 export type DirectoryTreeProps = {
   searchText?: string
   rootPath?: string
+  ignoreList?: string
+  onSearching?: (isSearching: boolean) => void
 }
 
 function getFileList(path: string) {
@@ -106,7 +108,12 @@ export const DirectoryTree: FC<DirectoryTreeProps> = (props) => {
   const { result, startSearch, isSearching, setResult } = useSearchingFile({
     text: props.searchText,
     dir: props.rootPath,
+    ignoreList: props.ignoreList,
   })
+
+  useEffect(() => {
+    props.onSearching?.(isSearching)
+  }, [isSearching]);
 
   const actualList = useMemo(() => mode === 'searching' ? result : fileList, [mode, result, fileList])
 

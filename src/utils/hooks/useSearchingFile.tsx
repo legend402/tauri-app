@@ -8,6 +8,7 @@ import type { TreeDataNode } from 'antd';
 interface SearchFileProps {
   text?: string
   dir?: string
+  ignoreList?: string
 }
 
 type SearchFileReturn = {
@@ -45,7 +46,7 @@ export const useSearchingFile = (payload: SearchFileProps) => {
         }
       })
     })
-    invoke('search_file', { dir: payload.dir, text: payload.text })
+    invoke('search_file', { dir: payload.dir, text: payload.text, ignore: payload.ignoreList })
   }
   listen('search-end', () => {
     unSearchListen()
