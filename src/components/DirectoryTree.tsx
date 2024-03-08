@@ -67,7 +67,7 @@ export const DirectoryTree: FC<DirectoryTreeProps> = (props) => {
           key: file.path,
           isLeaf: file.file_type === 'file',
         }
-      })
+      }).sort((a, b) => (a.isLeaf === b.isLeaf) || a.isLeaf ? 1 : -1)
       setFileList(formatData);
     } else {
       console.log(message);
@@ -88,7 +88,7 @@ export const DirectoryTree: FC<DirectoryTreeProps> = (props) => {
               key: file.path,
               isLeaf: file.file_type === 'file',
             } 
-          })
+          }).sort((a, b) => (a.isLeaf === b.isLeaf) || a.isLeaf ? 1 : -1)
           if (mode === 'searching') {
             setResult((origin) =>
               updateTreeData(origin, node.key as string, children),

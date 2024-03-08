@@ -46,9 +46,11 @@ export const useSearchingFile = (payload: SearchFileProps) => {
         }
       })
     })
+    console.time('search-file')
     invoke('search_file', { dir: payload.dir, text: payload.text, ignore: payload.ignoreList })
   }
   listen('search-end', () => {
+    console.timeEnd('search-file')
     unSearchListen()
     setSearching(false)
   })

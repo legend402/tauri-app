@@ -10,7 +10,7 @@ pub async fn open_file(path: &str) -> Result<Message<String>, Message<String>> {
     // 对于 Unix-like 系统（包括 Linux 和 macOS）
     "linux" | "macos" => Command::new("xdg-open").arg(path_buf).output().unwrap(),
     // 对于 Windows 系统
-    "windows" => Command::new("explorer.exe").arg(path_buf).output().unwrap(),
+    "windows" => Command::new("explorer").arg(path_buf).output().unwrap(),
     _ => return Err(Message {
       message: format!("Unsupported operating system: {}", env::consts::OS),
       code: 01,

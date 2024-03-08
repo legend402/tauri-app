@@ -2,9 +2,6 @@ use std::{env, fs, sync::{Arc, Mutex}, thread};
 
 use crate::handler::{file_struct::Message, get_file_list::FileList};
 
-use super::get_file_list::get_file_type;
-
-
 #[derive(Clone)]
 struct SearchTask {
   dir: String,
@@ -47,10 +44,14 @@ pub fn search_file_inner(dir: &str, text: &str, ignore: &Vec<&str>, windows: &ta
   match fs::read_dir(&dir) {
     Ok(dirs) => {
       for entry in dirs {
-        let path = entry.unwrap().path();
-        let is_dir = get_file_type(&path);
+        let entry = entry.unwrap();
+        let path = entry.path();
+        
+        let file_type = String::from(if path.is_dir() { "dir" } else { "file" });
         let path_to_string = path.display().to_string();
-        if ignore.len() > 0 && ignore.iter().any(|it| path_to_string.contains(it)) {
+        let file_name = path.file_name().unwrap().to_str().unwrap();
+        if ignore.len() > 0 && ignore.contains(&file_name) {
+          println!("ignore: {}", path_to_string);
           continue;
         }
         if path_to_string.contains(text) {
@@ -58,12 +59,12 @@ pub fn search_file_inner(dir: &str, text: &str, ignore: &Vec<&str>, windows: &ta
             message: "success".to_string(),
             code: 200,
             data: FileList {
-              file_type: is_dir,
+              file_type,
               path: path_to_string,
-              file_name: path.file_name().unwrap().to_string_lossy().to_string(),
+              file_name: file_name.to_string(),
             }
           });
-        } else if is_dir == "dir" {
+        } else if file_type == "dir" {
           search_file_inner(&path_to_string, text, ignore, windows);
         }
       }
