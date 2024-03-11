@@ -3,14 +3,19 @@ use std::{env, path::PathBuf, process::Command};
 use super::file_struct::Message;
 
 #[tauri::command]
-pub async fn open_file(path: &str) -> Result<Message<String>, Message<String>> {
-  let mut path_buf = PathBuf::from("D:\\");
-  path_buf.push(&path);
+pub async fn open_file(path: &str, is_open: bool) -> Result<Message<String>, Message<String>> {
   let output = match env::consts::OS {
     // 对于 Unix-like 系统（包括 Linux 和 macOS）
-    "linux" | "macos" => Command::new("xdg-open").arg(path_buf).output().unwrap(),
+    "linux" | "macos" => Command::new("xdg-open").arg(PathBuf::from(path)).output().unwrap(),
     // 对于 Windows 系统
-    "windows" => Command::new("explorer").arg(path_buf).output().unwrap(),
+    "windows" => {
+      let mut args = path.to_string();
+      if !is_open {
+        args = "/n,/select,".to_owned() + path;
+      }
+      println!("{}", args);
+      Command::new("explorer").arg(args).output().unwrap()
+    },
     _ => return Err(Message {
       message: format!("Unsupported operating system: {}", env::consts::OS),
       code: 01,

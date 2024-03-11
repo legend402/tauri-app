@@ -8,12 +8,15 @@ interface TreeNodeProps {
   originName?: boolean,
 }
 
-const openDir = async (path: string) => {
-  console.log(await invoke('open_file', { path }));
+const openFile = async (path: string) => {
+  await invoke('open_file', { path, isOpen: true });
 }
 
 const handleAction = {
-  openDir,
+  openDir: async (path: string) => {
+    await invoke('open_file', { path, isOpen: false });
+  },
+  openFile,
   copyPath: (text: string) => {
     navigator.clipboard.writeText(text)
   }

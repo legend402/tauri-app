@@ -51,7 +51,7 @@ pub fn search_file_inner(dir: &str, text: &str, ignore: &Vec<&str>, windows: &ta
         let path_to_string = path.display().to_string();
         let file_name = path.file_name().unwrap().to_str().unwrap();
         if ignore.len() > 0 && ignore.contains(&file_name) {
-          println!("ignore: {}", path_to_string);
+          // println!("ignore: {}", path_to_string);
           continue;
         }
         if path_to_string.contains(text) {
